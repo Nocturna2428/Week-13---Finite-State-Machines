@@ -1,44 +1,74 @@
-module binary(// Implement binary state machine
-    input w, clk, reset,
-    output z,
-    output State0, State1, State2
-);
-    wire [2:0] Next;
-    
-    dff zero(
-        .Default(0),
-        .D(Next[0]),
-        .clk(clk),
-        .Q(State0),
-        .reset(reset)
-        );
-        
-    dff one(
-        .Default(0),
-        .D(Next[1]),
-        .clk(clk),
-        .Q(State1),
-        .reset(reset)
-        );
-        
-    dff two(
-        .Default(0),
-        .D(Next[2]),
-        .clk(clk),
-        .Q(State2),
-        .reset(reset)
-        );
-        
-    assign z = (State1 & ~State0) | (State2 & ~State0);
-    assign Next[0] =
-      ( w  & ~State0 & ~State2) |
-      ( w  & ~State1 & ~State2) |
-      (~w  & ~State0 & ~State1) |
-      (~w  &  State0 &  State1 & ~State2);
-    assign Next[1] =
-      (w  & ~State0 & ~State2) |
-      (State0 & ~State1 & ~State2) |
-      (State1 & ~State0 & ~State2);
-   assign Next[2] = (~State1 & ~State0 &~w) | (~State2 & ~State0 & w) | (~State2 & ~State1 & w) | (State1 & State0 & ~w) | (State2 & ~w);
+// Implement one-hot state machine
+module onehot(
+    input w,
+    input clk,
+    input reset, 
+    output A, B, C, D, E,   
+    output z
+); 
+    wire Anext, Bnext, Cnext, Dnext, Enext;
+    wire Astate, Bstate, Cstate, Dstate, Estate;
 
-endmodule
+    dff Adff(
+        .Default(1'b1),
+        .reset(reset),
+        .D(Anext),
+        .clk(clk),
+        .Q(Astate)
+    );
+    
+    dff Bdff(
+        .Default(1'b0),
+        .reset(reset),
+        .D(Bnext),
+        .clk(clk),
+        .Q(Bstate)
+    );
+    
+    dff Cdff(
+        .Default(1'b0),
+        .reset(reset),
+        .D(Cnext),
+        .clk(clk),
+        .Q(Cstate)
+    );
+    
+    dff Ddff(
+        .Default(1'b0),
+        .reset(reset),
+        .D(Dnext),
+        .clk(clk),
+        .Q(Dstate)
+    );
+    dff Edff(
+        .Default(1'b0),
+        .reset(reset),
+        .D(Enext),
+        .clk(clk),
+        .Q(Estate)
+    );
+    
+    assign Anext = 1'b0;
+    
+    assign Bnext = (Astate & ~w) |
+                   (Dstate & ~w) |
+                   (Estate & ~w);
+                   
+    assign Cnext = (Bstate & ~w) |
+                   (Cstate & ~w);
+                   
+    assign Dnext = (Astate & w) |
+                   (Bstate & w) |
+                   (Cstate & w);
+                   
+    assign Enext = (Dstate & w) |
+                   (Estate & w);
+                   
+    assign z = Cstate | Estate;
+    
+    assign A = Astate;
+    assign B = Bstate;
+    assign C = Cstate;
+    assign D = Dstate;
+    assign E = Estate;
+endmodule 
