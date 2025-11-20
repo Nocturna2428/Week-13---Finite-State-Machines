@@ -1,74 +1,50 @@
-// Implement one-hot state machine
-module onehot(
+// Implement binary state machine
+module binary(
     input w,
     input clk,
-    input reset, 
-    output A, B, C, D, E,   
-    output z
+    input reset,
+    output z, zero, one, two
 ); 
-    wire Anext, Bnext, Cnext, Dnext, Enext;
-    wire Astate, Bstate, Cstate, Dstate, Estate;
-
-    dff Adff(
-        .Default(1'b1),
+    wire [2:0] State;
+    wire [2:0] Next;
+    
+    dff dff_zero(
+        .Default(0),
+        .D(Next[0]),
         .reset(reset),
-        .D(Anext),
         .clk(clk),
-        .Q(Astate)
+        .Q(State[0])
     );
     
-    dff Bdff(
-        .Default(1'b0),
+    dff dff_one(
+        .Default(0),
+        .D(Next[1]),
         .reset(reset),
-        .D(Bnext),
         .clk(clk),
-        .Q(Bstate)
+        .Q(State[1])
     );
     
-    dff Cdff(
-        .Default(1'b0),
+    dff dff_two(
+        .Default(0),
+        .D(Next[2]),
         .reset(reset),
-        .D(Cnext),
         .clk(clk),
-        .Q(Cstate)
+        .Q(State[2])
     );
     
-    dff Ddff(
-        .Default(1'b0),
-        .reset(reset),
-        .D(Dnext),
-        .clk(clk),
-        .Q(Dstate)
-    );
-    dff Edff(
-        .Default(1'b0),
-        .reset(reset),
-        .D(Enext),
-        .clk(clk),
-        .Q(Estate)
-    );
+    assign Next[0] = (~w & ~State[1] & ~State[0]) | (w & ~State[2] & ~State[1]) | (w & ~State[2] & ~State[0]) | (~w & State[1] & State[0]);
+        
+        
+    assign Next[1] = (~State[1] & State[0]) | (State[1] & ~State[0]) | (w & ~State[2] & ~State[1]);
+        
+         
+    assign Next[2] = (w & State[2]) | (w & State[1] & State[0]);
+       
     
-    assign Anext = 1'b0;
+    assign z = (~State[2] &  State[1] & ~State[0]) | ( State[2] & ~State[1] & ~State[0]);
     
-    assign Bnext = (Astate & ~w) |
-                   (Dstate & ~w) |
-                   (Estate & ~w);
-                   
-    assign Cnext = (Bstate & ~w) |
-                   (Cstate & ~w);
-                   
-    assign Dnext = (Astate & w) |
-                   (Bstate & w) |
-                   (Cstate & w);
-                   
-    assign Enext = (Dstate & w) |
-                   (Estate & w);
-                   
-    assign z = Cstate | Estate;
+    assign zero = State[0];
+    assign one = State[1];
+    assign two = State[2];
     
-    assign A = Astate;
-    assign B = Bstate;
-    assign C = Cstate;
-    assign D = Dstate;
-    assign E = Estate;
-endmodule 
+endmodule
