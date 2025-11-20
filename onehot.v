@@ -1,5 +1,5 @@
 
-module one_hot(
+module onehot(
     input w, reset, clk,
     output z,
     output As, Bs, Cs, Ds, Es // they are A-E states
