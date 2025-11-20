@@ -4,27 +4,27 @@ module top(
     input btnC, // clk
     input btnU // reset
 );
+
     // Hook up binary and one-hot state machines
-    onehot(
+    onehot onehot_inst(
         .w(sw),
         .clk(btnC),
+        .reset(btnU),
         .z(led[0]),
-        .Astate(led[2]),
-        .Bstate(led[3]),
-        .Cstate(led[4]),
-        .Dstate(led[5]),
-        .Estate(led[6]),
-        .reset(btnU)
-        );
-        
-    binary binary(
+        .A(led[2]),
+        .B(led[3]),
+        .C(led[4]),
+        .D(led[5]),
+        .E(led[6])        
+    );
+    
+    binary binary_inst(
         .w(sw),
         .clk(btnC),
-        .z(led[1]),
-        .State0(led[7]),
-        .State1(led[8]),
-        .State2(led[9]),
-        .reset(btnU)
-        );
-        
+        .reset(btnU),
+        .zero(led[7]),
+        .one(led[8]),
+        .two(led[9]),
+        .z(led[1])        
+    );
 endmodule
