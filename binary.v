@@ -1,37 +1,34 @@
-module fsm_binary(
-    input clk,
-    input reset,
-    input w,
+module binary(// Implement binary state machine
+    input w, clk, reset,
     output z,
-    output [2:0] state
+    output State0, State1, State2
 );
-
-    reg [2:0] S;       // current state
-    assign state = S;
-
+    wire [2:0] Next;
     
-    assign z = (S == 3'b010) | (S == 3'b100);
-
-    reg [2:0] Next;
-
-    // Next state logic (combinational)
-    always @(*) begin
-        case (S)
-            3'b000: Next = (w ? 3'b011 : 3'b001); // A → D or B
-            3'b001: Next = (w ? 3'b011 : 3'b010); // B → D or C
-            3'b010: Next = (w ? 3'b011 : 3'b010); // C → D or C
-            3'b011: Next = (w ? 3'b100 : 3'b001); // D → E or B
-            3'b100: Next = (w ? 3'b100 : 3'b001); // E → E or B
-            default: Next = 3'b000;               
-        endcase
-    end
-
-    // Sequential update
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            S <= 3'b000;   // This will start in A
-        else
-            S <= Next;
-    end
+    dff zero(
+        .D(Next[0]),
+        .clk(clk),
+        .Q(State0),
+        .reset(reset)
+        );
+        
+    dff one(
+        .D(Next[1]),
+        .clk(clk),
+        .Q(State1),
+        .reset(reset)
+        );
+        
+    dff two(
+        .D(Next[2]),
+        .clk(clk),
+        .Q(State2),
+        .reset(reset)
+        );
+        
+    assign z = (State1 & ~State0) | (State2 & ~State0);
+    assign Next[0] = (State2 & w) | (State1 & State0 & w);
+    assign Next[1] = (~State2 & State1 &~State0) | (~State2 & ~ State0 & w) | (State0 & ~State1);
+    assign Next[2] = (~State1 & ~State0 &~w) | (~State2 & ~State0 & w) | (~State2 & ~State1 & w) | (State1 & State0 & ~w) | (State2 & ~w);
 
 endmodule
