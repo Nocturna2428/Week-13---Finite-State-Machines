@@ -1,28 +1,37 @@
-
-//This is the three-state system with binary values.
-module binary(
-    input w,
+module fsm_binary(
     input clk,
-    output z
+    input reset,
+    input w,
+    output z,
+    output [2:0] state
 );
 
-    wire [1:0] State;
-    wire [1:0] Next;
-// this is the action and state for some buttons
-    dff zero(
-        .D(Next[0]),
-        .clk(clk),
-        .Q(State[0])
-    );
+    reg [2:0] S;       // current state
+    assign state = S;
 
-    dff one(
-        .D(Next[1]),
-        .clk(clk),
-        .Q(State[1])
-    );
+    
+    assign z = (S == 3'b010) | (S == 3'b100);
 
-    assign z = State[1] & ~State[0];
-    assign Next[0] = w & ~State[1] & ~State[0];
-    assign Next[1] = w & (State[1] | State[0]);
+    reg [2:0] Next;
+
+    // Next state logic (combinational)
+    always @(*) begin
+        case (S)
+            3'b000: Next = (w ? 3'b011 : 3'b001); // A → D or B
+            3'b001: Next = (w ? 3'b011 : 3'b010); // B → D or C
+            3'b010: Next = (w ? 3'b011 : 3'b010); // C → D or C
+            3'b011: Next = (w ? 3'b100 : 3'b001); // D → E or B
+            3'b100: Next = (w ? 3'b100 : 3'b001); // E → E or B
+            default: Next = 3'b000;               
+        endcase
+    end
+
+    // Sequential update
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            S <= 3'b000;   // This will start in A
+        else
+            S <= Next;
+    end
 
 endmodule
