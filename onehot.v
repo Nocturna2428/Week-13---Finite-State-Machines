@@ -14,33 +14,25 @@ module one_hot(
     // This is here for debugging
     assign state_out = {E, D, C, B, A};
     
-    wire Anext, Bnext, Cnext;
-    wire Astate, Bstate, Cstate;
+    
+    wire Anext = (A & w == 0) ? 0 : 0; 
+    wire Bnext = (A & ~w) | (D & ~w) | (E & ~w);
+    wire Cnext = (B & ~w) | (C & ~w);
+    wire Dnext = (A & w) | (B & w) | (C & w);
+    wire Enext = (D & w) | (E & w);
 
-    dff Adff(
-        .Default(1'b1),
-        .D(Anext),
-        .clk(clk),
-        .Q(Astate)
-    );
+    // Sequential update
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            A <= 1; B <= 0; C <= 0; D <= 0; E <= 0;   // Initial state A
+        end
+        else begin
+            A <= 0;             // A is never a next state in this machine
+            B <= Bnext;
+            C <= Cnext;
+            D <= Dnext;
+            E <= Enext;
+        end
+    end
 
-    dff Bdff(
-        .Default(1'b0),
-        .D(Bnext),
-        .clk(clk),
-        .Q(Bstate)
-    );
-
-    dff Cdff(
-        .Default(1'b0),
-        .D(Cnext),
-        .clk(clk),
-        .Q(Cstate)
-    );
-
-    assign z = Cstate;
-
-    assign Anext = ~w;
-    assign Bnext = w & Astate;
-    assign Cnext = (w & Bstate) | (w & Cstate);
 endmodule
