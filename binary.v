@@ -1,3 +1,5 @@
+
+//This is the three-state system with binary values.
 module binary(
     input w,
     input clk,
